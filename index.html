@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial: Cómo Montamos tu App en Firebase</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="header">
+        <h1>Tutorial: De Cero a "Deploy"</h1>
+        <p>La guía "pasito a pasito" de cómo subimos tu app de arbitraje a Firebase.</p>
+    </header>
+
+    <main class="container">
+
+        <section class="step-card">
+            <h2>Introducción</h2>
+            <p>Seguimos esta guía para tomar tu proyecto web (HTML, CSS, JS y archivos JSON) y ponerlo en línea usando <strong>Firebase Hosting</strong>, conectándolo a una base de datos en <strong>Cloud Firestore</strong> que se "siembra" (se carga) sola.</p>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 1: Preparación (El "Terreno")</h2>
+            
+            <div class="pasito">
+                <h3>Pasito 1.1: Crear el Proyecto en Firebase</h3>
+                <ol>
+                    <li>Fuimos a la <a href="https://console.firebase.google.com/" target="_blank">Consola de Firebase</a>.</li>
+                    <li>Hicimos clic en <strong>"Crear un proyecto"</strong>.</li>
+                    <li>Le diste un nombre (ej. `mi-web-app`).</li>
+                    <li>Desactivamos Google Analytics (para ir más rápido).</li>
+                </ol>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 1.2: Activar los Servicios</h3>
+                <p>Dentro del proyecto nuevo, activamos dos servicios clave:</p>
+                <ul>
+                    <li><strong>Firestore Database:</strong> (en <strong>Modo de Prueba</strong>) para que nuestra base de datos JSON pudiera vivir en la nube.</li>
+                    <li><strong>Hosting:</strong> (solo "Comenzar") para tener un lugar donde subir nuestra página web.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 2: Organización Local (Tu Carpeta)</h2>
+            
+            <div class="pasito">
+                <h3>Pasito 2.1: Instalar Node.js</h3>
+                <p>Node.js es el "motor" que nos permite usar las herramientas de Firebase. Lo instalamos desde <a href="https://nodejs.org/" target="_blank">nodejs.org</a> (versión LTS).</p>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 2.2: Crear la Estructura de Carpetas</h3>
+                <p>Creamos una carpeta raíz (ej. `UNO`) y, <strong>crucialmente</strong>, creamos una carpeta `public` adentro. Esta es la estructura que Firebase espera:</p>
+                <pre><code class="language-bash">UNO/
+└── public/
+    ├── css/
+    │   └── style.css
+    ├── data/
+    │   ├── networks.json
+    │   └── resources.json
+    ├── index.html
+    ├── script.js
+    ├── datos.json
+    └── database.json  <-- (La copia de datos.json)
+</code></pre>
+                <p><strong>Nota:</strong> Tu `script.js` usa `database.json` para la "siembra" inicial y `datos.json` para cargar las listas. Por eso necesitábamos ambos.</p>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 3: La Conexión (Terminal)</h2>
+            
+            <div class="pasito">
+                <h3>Pasito 3.1: Instalar Firebase-Tools</h3>
+                <p>Abrimos la terminal y ejecutamos este comando para instalar las herramientas de Firebase en toda la computadora:</p>
+                <pre><code class="language-bash">npm install -g firebase-tools</code></pre>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 3.2: Iniciar Sesión</h3>
+                <p>Conectamos nuestra terminal a nuestra cuenta de Google (¡la que es dueña del proyecto!):</p>
+                <pre><code class="language-bash">firebase login</code></pre>
+                <p class="note">Aquí fue donde tuvimos que usar `firebase logout` y `firebase login` de nuevo para asegurarnos de usar la cuenta correcta y no `defiargentina@gmail.com`.</p>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 3.3: Iniciar el Proyecto (firebase init)</h3>
+                <p>Navegamos a nuestra carpeta raíz (`UNO`) y ejecutamos el comando mágico:</p>
+                <pre><code class="language-bash">cd C:\...\UNO
+firebase init</code></pre>
+            </div>
+            
+            <div class="pasito">
+                <h3>Pasito 3.4: Responder las Preguntas</h3>
+                <p>Le dijimos a `firebase init` exactamente lo que queríamos:</p>
+                <ol>
+                    <li>"Are you ready?" -> <strong>Y</strong> (Yes)</li>
+                    <li>"Which features?" -> Seleccionamos <strong>Firestore</strong> y <strong>Hosting</strong>.</li>
+                    <li>"Project Setup" -> Elegimos <strong>"Use an existing project"</strong>.</li>
+                    <li>(Seleccionamos nuestro proyecto `mi-web-app` de la lista).</li>
+                    <li>"Firestore Rules?" -> <strong>Enter</strong> (default).</li>
+                    <li>"Firestore Indexes?" -> <strong>Enter</strong> (default).</li>
+                    <li>"Public directory?" -> <strong>public</strong> (¡El paso más importante!).</li>
+                    <li>"Single-page app?" -> <strong>n</strong> (No).</li>
+                    <li>"GitHub builds?" -> <strong>n</strong> (No).</li>
+                </ol>
+                <p class="note"><strong>Error Común (¡Lo solucionamos!):</strong> Al principio nos dio un error 403 (Permiso Denegado) porque la herramienta recordaba un proyecto borrado (`fluxion-v1`). Lo arreglamos usando `firebase use --add` para forzar la conexión al proyecto nuevo antes de `init`.</p>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 4: Configurar la App (El `firebaseConfig`)</h2>
+            <div class="pasito">
+                <h3>Pasito 4.1: Obtener la "Dirección"</h3>
+                <p>Tu `script.js` necesita saber a qué proyecto conectarse. Fuimos a la consola de Firebase:</p>
+                <ol>
+                    <li>Configuración del proyecto ⚙️.</li>
+                    <li>Pestaña "General", sección "Tus apps".</li>
+                    <li>Registramos una app Web (`</>`) y Firebase nos dio el objeto `firebaseConfig`.</li>
+                </ol>
+            </div>
+            <div class="pasito">
+                <h3>Pasito 4.2: Pegar en `script.js`</h3>
+                <p>Reemplazamos el `firebaseConfig` viejo (de `fluxion-v1` o `iotaichain`) en tu `script.js` por el **NUEVO**.</p>
+                <pre><code class="language-javascript">// Tu script.js tiene esto:
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "mi-web-app.firebaseapp.com",
+  projectId: "mi-web-app",
+  // ...etc
+};
+</code></pre>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 5: ¡Subir la Web! (El Deploy)</h2>
+            <div class="pasito">
+                <h3>Pasito 5.1: El Comando Final</h3>
+                <p>En nuestra terminal (aún en la carpeta `UNO`), ejecutamos:</p>
+                <pre><code class="language-bash">firebase deploy</code></pre>
+            </div>
+            <div class="pasito">
+                <h3>Pasito 5.2: La Magia de la "Siembra"</h3>
+                <p>Al ejecutar `firebase deploy`, pasó esto:</p>
+                <ol>
+                    <li>Subió **todo** lo que estaba en la carpeta `public` a la "Hosting URL".</li>
+                    <li>Visitamos esa URL.</li>
+                    <li>Tu `script.js` se ejecutó.</li>
+                    <li>Vio que Firestore estaba vacío.</li>
+                    <li>Buscó el archivo `database.json` (que también subimos).</li>
+                    <li>Leyó `database.json` y **subió esos datos a Firestore automáticamente**.</li>
+                </ol>
+            </div>
+            <div class="pasito">
+                <h3>Pasito 5.3: El Arreglo del "Welcome"</h3>
+                <p>La primera vez, vimos una página de "Welcome" de Firebase. Esto pasó porque `firebase init` creó un `index.html` de ejemplo dentro de `public`.</p>
+                <p><strong>La solución:</strong></p>
+                <ol>
+                    <li>Borramos el `index.html` de ejemplo de la carpeta `public`.</li>
+                    <li>Nos aseguramos de que **nuestro** `index.html` estuviera allí.</li>
+                    <li>Volvimos a ejecutar `firebase deploy`.</li>
+                </ol>
+                <p>¡Y con eso, tu aplicación de arbitraje quedó funcionando en línea!</p>
+            </div>
+        </section>
+<section class="step-card">
+            <h2>Fase 6: Crear el JSON (El "Plano" de Datos)</h2>
+            
+            <div class="pasito">
+                <h3>Pasito 6.1: Definir los Datos</h3>
+                <p>Primero, definimos qué datos necesitábamos. Tu `script.js` original esperaba una estructura de datos muy específica para funcionar. Acordamos que necesitábamos:</p>
+                <ul>
+                    <li>Una lista de Redes (networks).</li>
+                    <li>Una lista de Tokens (con sus representaciones en cada red).</li>
+                    <li>Listas de Exchanges (DEX y CEX) con sus fees y datos.</li>
+                    <li>Listas de Proveedores de Préstamos (flash_lenders).</li>
+                </ul>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 6.2: Crear el archivo `database.json`</h3>
+                <p>Basado en tu `script.js`, que busca un archivo `database.json` para "sembrar" la base de datos, tomamos tu JSON original (`datos.json`) y lo guardamos con ese nombre. Este archivo es el "plano" que tu app usa para construir la base de datos en la nube la primera vez que se carga.</p>
+                <pre><code class="language-javascript">// Un extracto de tu database.json:
+{
+  "networks": [ "Arbitrum", "Bitcoin", "BnB", ... ],
+  "tokens": [
+    { "symbol": "BTC", "names": "Bitcoin", ... },
+    { "symbol": "ETH", "names": "Ethereum", ... }
+  ],
+  "flash_lenders": [
+    { "name": "AAVE", "network": "ethereum", ... }
+  ],
+  "exchanges": {
+    "dex": [ { "name": "Uniswap", ... } ],
+    "cex": [ { "name": "Binance", ... } ]
+  }
+}
+</code></pre>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 7: Preparar Firebase (El "Terreno")</h2>
+            
+            <div class="pasito">
+                <h3>Pasito 7.1: Crear el Proyecto en Firebase</h3>
+                <ol>
+                    <li>Fuimos a la <a href="https://console.firebase.google.com/" target="_blank">Consola de Firebase</a>.</li>
+                    <li>Hicimos clic en <strong>"Crear un proyecto"</strong>.</li>
+                    <li>Le diste un nombre (ej. `mi-web-app`).</li>
+                    <li>Desactivamos Google Analytics (para ir más rápido).</li>
+                </ol>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 7.2: Activar los Servicios</h3>
+                <p>Dentro del proyecto nuevo, activamos dos servicios clave:</p>
+                <ul>
+                    <li><strong>Firestore Database:</strong> (en <strong>Modo de Prueba</strong>) para que nuestra base de datos JSON pudiera vivir en la nube.</li>
+                    <li><strong>Hosting:</strong> (solo "Comenzar") para tener un lugar donde subir nuestra página web.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 8: Organización Local (Tu Carpeta)</h2>
+            
+            <div class="pasito">
+                <h3>Pasito 8.1: Instalar Node.js</h3>
+                <p>Node.js es el "motor" que nos permite usar las herramientas de Firebase. Lo instalamos desde <a href="https://nodejs.org/" target="_blank">nodejs.org</a> (versión LTS).</p>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 8.2: Crear la Estructura de Carpetas</h3>
+                <p>Creamos una carpeta raíz (ej. `UNO`) y, <strong>crucialmente</strong>, creamos una carpeta `public` adentro. Esta es la estructura que Firebase espera:</p>
+                <pre><code class="language-bash">UNO/
+└── public/
+    ├── css/
+    │   └── style.css
+    ├── data/
+    │   ├── networks.json
+    │   └── resources.json
+    ├── index.html
+    ├── script.js
+    ├── datos.json
+    └── database.json  <-- ¡El archivo "semilla"!
+</code></pre>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 9: La Conexión (Terminal)</h2>
+            
+            <div class="pasito">
+                <h3>Pasito 9.1: Instalar Firebase-Tools</h3>
+                <p>Abrimos la terminal y ejecutamos este comando para instalar las herramientas de Firebase en toda la computadora:</p>
+                <pre><code class="language-bash">npm install -g firebase-tools</code></pre>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 9.2: Iniciar Sesión</h3>
+                <p>Conectamos nuestra terminal a nuestra cuenta de Google (¡la que es dueña del proyecto!):</p>
+                <pre><code class="language-bash">firebase login</code></pre>
+            </div>
+
+            <div class="pasito">
+                <h3>Pasito 9.3: Iniciar el Proyecto (firebase init)</h3>
+                <p>Navegamos a nuestra carpeta raíz (`UNO`) y ejecutamos el comando mágico:</p>
+                <pre><code class="language-bash">cd C:\...\UNO
+firebase init</code></pre>
+            </div>
+            
+            <div class="pasito">
+                <h3>Pasito 9.4: Responder las Preguntas Clave</h3>
+                <p>Le dijimos a `firebase init` exactamente lo que queríamos:</p>
+                <ol>
+                    <li>"Are you ready?" -> <strong>Y</strong> (Yes)</li>
+                    <li>"Which features?" -> Seleccionamos <strong>Firestore</strong> y <strong>Hosting</strong>.</li>
+                    <li>"Project Setup" -> Elegimos <strong>"Use an existing project"</strong>.</li>
+                    <li>(Seleccionamos nuestro proyecto nuevo de la lista).</li>
+                    <li>"Public directory?" -> <strong>public</strong> (¡El paso más importante!).</li>
+                    <li>"Single-page app?" -> <strong>n</strong> (No).</li>
+                    <li>"GitHub builds?" -> <strong>n</strong> (No).</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="step-card" id="troubleshooting">
+            <h2 class="error-header">Fase 10: Solución de Problemas (¡Lo que Sucedió!)</h2>
+            
+            <div class="pasito">
+                <h3>El Error 403: "Permiso Denegado"</h3>
+                <p>Al ejecutar `firebase init`, nos topamos con este error:</p>
+                <pre><code class="language-bash">Error: Failed to get Firebase project fluxion-v1... 
+permission denied.</code></pre>
+            </div>
+            <div class="pasito">
+                <h3>La Causa: Un Proyecto "Fantasma"</h3>
+                <p>Descubrimos que tu terminal estaba "atascada" recordando un proyecto borrado (`fluxion-v1`) por dos razones:</p>
+                <ol>
+                    <li>Estabas logueado con la cuenta incorrecta (`defiargentina@gmail.com`).</li>
+                    <li>Existía un archivo "oculto" de configuración (`.firebaserc`) que apuntaba al proyecto viejo.</li>
+                </ol>
+            </div>
+            <div class="pasito">
+                <h3>La Solución (Paso a Paso)</h3>
+                <p>Hicimos esta secuencia para forzar la conexión correcta:</p>
+                <ol>
+                    <li><strong>Cerrar sesión:</strong> `firebase logout`</li>
+                    <li><strong>Iniciar sesión:</strong> `firebase login` (y elegimos la cuenta correcta).</li>
+                    <li><strong>Borrar el archivo "roto":</strong> `del .firebaserc` (en Windows).</li>
+                    <li><strong>Crear el `firebase.json` manual:</strong> Creamos un archivo `firebase.json` vacío (`{}`) para que el siguiente comando funcionara.</li>
+                    <li><strong>Forzar conexión:</strong> `firebase use --add` (y seleccionamos el proyecto NUEVO).</li>
+                    <li><strong>Re-ejecutar `init`:</strong> Volvimos a correr `firebase init`, que esta vez funcionó perfecto.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 11: Cómo Borrar un Proyecto (La "Demolición")</h2>
+            
+            <div class="pasito">
+                <h3>Pasito 11.1: Entrar al Proyecto</h3>
+                <p>En la consola de Firebase, haces clic en el proyecto que quieres borrar (ej. `gustavo-v100`).</p>
+            </div>
+            <div class="pasito">
+                <h3>Pasito 11.2: Ir a Configuración</h3>
+                <p>Haces clic en el ícono de engranaje ⚙️ (al lado de "Resumen del proyecto") y seleccionas <strong>"Configuración del proyecto"</strong>.</p>
+            </div>
+            <div class="pasito">
+                <h3>Pasito 11.3: Eliminar</h3>
+                <p>Bajas hasta el final de la página, haces clic en el botón rojo <strong>"Eliminar proyecto"</strong> y confirmas escribiendo el ID del proyecto.</p>
+                <p class="note">¡Cuidado! Esta acción es <strong>permanente e irreversible</strong>.</p>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 12: Configurar la App (El `firebaseConfig`)</h2>
+            <div class="pasito">
+                <h3>Pasito 12.1: Obtener la "Dirección"</h3>
+                <p>Tu `script.js` necesita saber a qué proyecto conectarse. Fuimos a la consola de Firebase:</p>
+                <ol>
+                    <li>Configuración del proyecto ⚙️.</li>
+                    <li>Pestaña "General", sección "Tus apps".</li>
+                    <li>Registramos una app Web (`</>`) y Firebase nos dio el objeto `firebaseConfig`.</li>
+                </ol>
+            </div>
+            <div class="pasito">
+                <h3>Pasito 12.2: Pegar en `script.js`</h3>
+                <p>Reemplazamos el `firebaseConfig` viejo en tu `script.js` por el **NUEVO** que nos dio Firebase.</p>
+                <pre><code class="language-javascript">// Tu script.js tiene esto:
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "mi-web-app.firebaseapp.com",
+  projectId: "mi-web-app",
+  // ...etc
+};
+</code></pre>
+            </div>
+        </section>
+
+        <section class="step-card">
+            <h2>Fase 13: ¡Subir la Web! (La Inauguración)</h2>
+            <div class="pasito">
+                <h3>Pasito 13.1: El Comando Final</h3>
+                <p>En nuestra terminal (en la carpeta `UNO`), ejecutamos:</p>
+                <pre><code class="language-bash">firebase deploy</code></pre>
+            </div>
+            <div class="pasito">
+                <h3>Pasito 13.2: La Magia de la "Siembra"</h3>
+                <p>Al ejecutar `firebase deploy`, pasó esto:</p>
+                <ol>
+                    <li>Subió **todo** lo que estaba en la carpeta `public` a la "Hosting URL".</li>
+                    <li>Visitamos esa URL.</li>
+                    <li>Tu `script.js` se ejecutó.</li>
+                    <li>Vio que Firestore estaba vacío (porque `!docSnap.exists()`).</li>
+                    <li>Buscó el archivo `database.json` (que también subimos).</li>
+                    <li>Leyó `database.json` y lo **subió a Firestore automáticamente** (la "siembra").</li>
+                </ol>
+            </div>
+            <div class="pasito">
+                <h3>Pasito 13.3: El Arreglo del "Welcome"</h3>
+                <p>La primera vez, vimos una página de "Welcome" de Firebase. Esto pasó porque `firebase init` creó un `index.html` de ejemplo dentro de `public`.</p>
+                <p><strong>La solución:</strong></p>
+                <ol>
+                    <li>Borramos el `index.html` de ejemplo de la carpeta `public`.</li>
+                    <li>Pusimos **nuestro** `index.html` (el tuyo) en su lugar.</li>
+                    <li>Volvimos a ejecutar `firebase deploy`.</li>
+                </ol>
+                <p>¡Y con eso, tu aplicación quedó funcionando en línea!</p>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="footer">
+        <p>Tutorial generado "pasito a pasito".</p>
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
